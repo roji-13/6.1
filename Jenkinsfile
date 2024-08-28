@@ -1,86 +1,89 @@
 pipeline {
     agent any
-    
-    environment {
-        EMAIL_RECIPIENT = 'roji.13804@gmail.com'
-    }
-    
+
     stages {
         stage('Build') {
             steps {
-                echo 'Building the code...'
-                // Example of using Maven for the build stage
-                echo 'mvn clean package'
+                echo "Building the code using Maven"
+                // Example build step
             }
         }
-        
+
         stage('Unit and Integration Tests') {
             steps {
-                echo 'Running unit and integration tests...'
-                // Example of using JUnit for unit tests
-                echo 'mvn test'
-                // Add integration test commands here
-                echo 'Integration test commands here'
+                echo "Running Unit and Integration Tests"
+                // Example test step
+            }
+            post {
+                always {
+                    script {
+                        def stageStatus = currentBuild.currentResult
+                        mail to: "roji.13804@gmail.com",
+                             subject: "Unit and Integration Tests Stage: ${stageStatus}",
+                             body: "The Unit and Integration Tests stage has completed with status: ${stageStatus}. Please find the attached logs for details.",
+                             attachmentsPattern: '/target/surefire-reports/*.xml'
+                    }
+                }
             }
         }
-        
+
         stage('Code Analysis') {
             steps {
-                echo 'Performing code analysis...'
-                // Example of using SonarQube for code analysis
-                echo 'mvn sonar:sonar'
+                echo "Performing Code Analysis with SonarQube"
             }
         }
-        
+
         stage('Security Scan') {
             steps {
-                echo 'Performing security scan...'
-                // Example of using OWASP Dependency-Check for security scanning
-                echo 'dependency-check.sh --project "My Project" --out reports'
+                echo "Performing Security Scan with OWASP Dependency-Check"
+                // Example security scan step
+            }
+            post {
+                always {
+                    script {
+                        def stageStatus = currentBuild.currentResult
+                        mail to: "roji.13804@gmail.com",
+                             subject: "Security Scan Stage: ${stageStatus}",
+                             body: "The Security Scan stage has completed with status: ${stageStatus}. Please find the attached logs for details.",
+                             attachmentsPattern: '/target/dependency-check-report.html'
+                    }
+                }
             }
         }
-        
+
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to staging...'
-                // Add deployment commands here
-                echo 'Deployment commands for staging here'
+                echo "Deploying to Staging Server"
+                // Example deploy step
             }
         }
-        
+
         stage('Integration Tests on Staging') {
             steps {
-                echo 'Running integration tests on staging...'
-                // Add integration test commands here
-                echo 'Integration test commands for staging here'
+                echo "Running Integration Tests on Staging"
+                // Example integration tests on staging step
             }
         }
-        
+
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to production...'
-                // Add deployment commands here
-                echo 'Deployment commands for production here'
+                echo "Deploying to Production Server"
+                // Example deploy step
             }
         }
     }
-    
+
     post {
         success {
-            emailext (
-                to: EMAIL_RECIPIENT,
-                subject: "Build Successful: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                body: "The build was successful.\n\nBuild details:\n${env.BUILD_URL}\n\nLogs:\n${env.BUILD_URL}console",
-                attachLog: true
-            )
+            mail to: "roji.13804@gmail.com",
+                 subject: "Pipeline Status: SUCCESS",
+                 body: "The pipeline completed successfully."
         }
+
         failure {
-            emailext (
-                to: EMAIL_RECIPIENT,
-                subject: "Build Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                body: "The build failed.\n\nBuild details:\n${env.BUILD_URL}\n\nLogs:\n${env.BUILD_URL}console",
-                attachLog: true
-            )
+            mail to: "roji.13804@gmail.com",
+                 subject: "Pipeline Status: FAILURE",
+                 body: "The pipeline failed. Please check the Jenkins logs for more details."
         }
     }
 }
